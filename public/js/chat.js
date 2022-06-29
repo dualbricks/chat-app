@@ -12,10 +12,15 @@ const $locationButton = document.querySelector('#send-location')
 const messageTemplate = document.querySelector('#message-template').innerHTML
 const locationTemplate = document.querySelector('#location-template').innerHTML
 
+// Options
+const{displayName, roomName} = Qs.parse(location.search, {ignoreQueryPrefix: true})
+
 
 //socket listeners
-socket.on('locationMessage', ({text, createdAt})=>{
+
+socket.on('locationMessage', ({text, createdAt, displayName})=>{
     const html = Mustache.render(locationTemplate, {
+        displayName,
         url: text,
         createdAt: moment(createdAt).format('h:mm A')
     })
@@ -24,9 +29,10 @@ socket.on('locationMessage', ({text, createdAt})=>{
 })
 
 
-socket.on('message', ({text, createdAt})=>{
+socket.on('message', ({text, createdAt, displayName})=>{
 
     const html = Mustache.render(messageTemplate, {
+        displayName,
         message: text,
         createdAt: moment(createdAt).format('h:mm A')
     })
@@ -72,4 +78,11 @@ $locationButton.addEventListener('click', ()=>{
             console.log("Location shared", message)
         })
     })
+})
+
+socket.emit('join', {displayName, roomName}, (error)=>{
+    if(error) {
+        alert(error)
+        location.href = '/'
+    }
 })
