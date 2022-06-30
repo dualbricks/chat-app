@@ -5,6 +5,7 @@ const socketio = require('socket.io')
 const Filter = require('bad-words')
 const {generateMessage} = require('./utils/messages')
 const {addUser, getUser, removeUser, getUsersInRoom}= require('./utils/users')
+const { isBooleanObject } = require('util/types')
 
 const app = express()
 const server = http.createServer(app)
@@ -28,6 +29,10 @@ io.on('connection', (socket)=> {
         socket.join(user.roomName)
         socket.emit('message', generateMessage('System','Welcome!'))
         socket.broadcast.to(user.roomName).emit('message', generateMessage('System',`${user.displayName} has join the room.`))
+        io.to(user.roomName).emit('roomData', {
+            room: user.roomName,
+            users: getUsersInRoom(user.roomName)
+        })
 
         callback()
     })
@@ -52,8 +57,11 @@ io.on('connection', (socket)=> {
         const user = removeUser(socket.id)
         if(user) {
             io.to(user.roomName).emit('message', generateMessage('System',`${user.displayName} has left`))
+            io.to(user.roomName).emit('roomDataa',{
+                room: user.roomName,
+                users: getUsersInRoom(user.roomName)
+            })
         }
-        callback()
     })
     
 
